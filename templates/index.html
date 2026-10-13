@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock, Paper, Scissors — Phase 3 Arcade Edition</title>
+  <meta name="description" content="A premium, retro-modern Rock Paper Scissors Arcade web game with real-time countdown, particle physics confetti, unlockable achievements, and tournament modes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Canvas Confetti Overlay -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Achievement Toast Notification -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">✊✋✌️</span>
+      <div class="brand-text">
+        <h1 class="brand-title">RPS ARCADE</h1>
+        <span class="brand-badge">PHASE 3 COMPLETE</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Player Name Chip -->
+      <button id="player-profile-btn" class="nav-btn profile-btn" title="Edit Player Name">
+        <span class="icon">👤</span>
+        <span id="player-name-display">Player 1</span>
+      </button>
+
+      <!-- Sound Toggle -->
+      <button id="sound-toggle-btn" class="nav-btn icon-btn" title="Toggle Sound">
+        <span id="sound-icon">🔊</span>
+      </button>
+
+      <!-- Theme Switcher -->
+      <button id="theme-toggle-btn" class="nav-btn icon-btn" title="Toggle Theme (Neon Dark / Light)">
+        <span id="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Container -->
+  <main class="arcade-container">
+    
+    <!-- Mode Selection Pill Bar -->
+    <section class="mode-selector-section">
+      <div class="mode-pills" role="tablist">
+        <button class="mode-pill active" data-mode="Quick Play" role="tab" id="mode-quick">
+          <span class="mode-icon">⚡</span>
+          <span class="mode-name">Quick Play</span>
+          <span class="mode-desc">Unlimited Casual</span>
+        </button>
+        <button class="mode-pill" data-mode="Best of 5" role="tab" id="mode-bo5">
+          <span class="mode-icon">🏆</span>
+          <span class="mode-name">Best of 5</span>
+          <span class="mode-desc">First to 3 Wins</span>
+        </button>
+        <button class="mode-pill" data-mode="Best of 10" role="tab" id="mode-bo10">
+          <span class="mode-icon">⚔️</span>
+          <span class="mode-name">Best of 10</span>
+          <span class="mode-desc">10 Rounds Battle</span>
+        </button>
+      </div>
+
+      <!-- Match Tracker (Hidden on Quick Play) -->
+      <div id="match-tracker" class="match-tracker hidden">
+        <div class="tracker-header">
+          <span id="match-round-indicator" class="tracker-round">Round 1</span>
+          <span id="match-target-indicator" class="tracker-target">First to 3 Points</span>
+        </div>
+        <div class="tracker-progress">
+          <div class="tracker-bar player-bar">
+            <span class="score-label">YOU: <strong id="tracker-player-score">0</strong></span>
+            <div class="bar-fill" id="player-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="tracker-vs">VS</div>
+          <div class="tracker-bar computer-bar">
+            <span class="score-label">AI: <strong id="tracker-computer-score">0</strong></span>
+            <div class="bar-fill" id="computer-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Battle Arena Section -->
+    <section class="arena-section">
+      <!-- Player Card -->
+      <div class="combatant-card player-card">
+        <div class="combatant-header">
+          <span class="combatant-tag player-tag">YOU</span>
+          <h2 id="card-player-name" class="combatant-name">Player 1</h2>
+        </div>
+        
+        <div class="weapon-display" id="player-weapon-display">
+          <div class="weapon-preview" id="player-preview">✊</div>
+          <div class="weapon-label" id="player-preview-label">Pick Your Weapon</div>
+        </div>
+
+        <div class="weapons-grid">
+          <button class="weapon-btn rock-btn" data-choice="rock" id="choice-rock" title="Rock crushes Scissors">
+            <span class="btn-emoji">✊</span>
+            <span class="btn-title">ROCK</span>
+            <span class="btn-sub">Beats Scissors</span>
+          </button>
+          <button class="weapon-btn paper-btn" data-choice="paper" id="choice-paper" title="Paper covers Rock">
+            <span class="btn-emoji">✋</span>
+            <span class="btn-title">PAPER</span>
+            <span class="btn-sub">Beats Rock</span>
+          </button>
+          <button class="weapon-btn scissors-btn" data-choice="scissors" id="choice-scissors" title="Scissors cuts Paper">
+            <span class="btn-emoji">✌️</span>
+            <span class="btn-title">SCISSORS</span>
+            <span class="btn-sub">Beats Paper</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VS Center Action Stage -->
+      <div class="arena-center">
+        <div class="countdown-circle" id="countdown-circle">
+          <span id="countdown-text" class="countdown-text">VS</span>
+        </div>
+        
+        <div class="status-banner" id="status-banner">
+          <span id="status-headline" class="status-headline">CHOOSE YOUR MOVE</span>
+          <span id="status-subtext" class="status-subtext">Click Rock, Paper, or Scissors to clash</span>
+        </div>
+
+        <button id="reset-match-btn" class="reset-round-btn hidden" title="Restart this match">
+          🔄 New Match
+        </button>
+      </div>
+
+      <!-- Computer Card -->
+      <div class="combatant-card computer-card">
+        <div class="combatant-header">
+          <span class="combatant-tag ai-tag">OPPONENT</span>
+          <h2 class="combatant-name">Arcade AI</h2>
+        </div>
+
+        <div class="weapon-display" id="computer-weapon-display">
+          <div class="weapon-preview ai-preview" id="computer-preview">🤖</div>
+          <div class="weapon-label" id="computer-preview-label">Waiting for move...</div>
+        </div>
+
+        <div class="ai-intel-box">
+          <div class="intel-stat">
+            <span class="intel-label">AI Difficulty</span>
+            <span class="intel-val">Retro Master</span>
+          </div>
+          <div class="intel-stat">
+            <span class="intel-label">Total Computer Wins</span>
+            <span class="intel-val" id="ai-win-count">0</span>
+          </div>
+          <div class="ai-pulse-bar">
+            <span class="ai-pulse-dot"></span>
+            <span id="ai-status-note">AI Ready</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="stats-section">
+      <div class="section-title-row">
+        <h3 class="section-title">📊 Live Combat Statistics</h3>
+        <span class="section-subtitle">Real-time performance calculation</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon">🎮</span>
+          <div class="stat-info">
+            <span class="stat-val" id="stat-total-rounds">0</span>
+            <span class="stat-lbl">Total Rounds</span>
+          </div>
+        </div>
+
+        <div class="stat-card win-rate-card">
+          <span class="stat-icon">📈</span>
+          <div class="stat-info">
+            <span class="stat-val" id="stat-win-rate">0.0%</span>
+            <span class="stat-lbl">Win Rate</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">🏆</span>
+          <div class="stat-info">
+            <span class="stat-val text-green" id="stat-player-wins">0</span>
+            <span class="stat-lbl">Player Wins</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">💀</span>
+          <div class="stat-info">
+            <span class="stat-val text-pink" id="stat-computer-wins">0</span>
+            <span class="stat-lbl">Computer Wins</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">🤝</span>
+          <div class="stat-info">
+            <span class="stat-val text-yellow" id="stat-draws">0</span>
+            <span class="stat-lbl">Draws</span>
+          </div>
+        </div>
+
+        <div class="stat-card streak-card">
+          <span class="stat-icon streak-flame">🔥</span>
+          <div class="stat-info">
+            <span class="stat-val text-cyan" id="stat-current-streak">0</span>
+            <span class="stat-lbl">Current Streak (Best: <strong id="stat-longest-streak">0</strong>)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Achievements Section -->
+    <section class="achievements-section">
+      <div class="section-title-row">
+        <h3 class="section-title">🏅 Trophies & Achievements (8 Badges)</h3>
+        <span class="section-subtitle">Unlock badges by dominating rounds and tournament matches</span>
+      </div>
+
+      <div class="achievements-grid" id="achievements-grid">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <!-- History & Leaderboard Tabs Section -->
+    <section class="history-section">
+      <div class="tabs-header">
+        <div class="tabs-buttons">
+          <button class="tab-btn active" id="tab-history-btn">📜 Round History</button>
+          <button class="tab-btn" id="tab-leaderboard-btn">🏆 Tournament Leaderboard</button>
+        </div>
+        <button id="clear-data-btn" class="danger-btn">🗑️ Clear Data</button>
+      </div>
+
+      <!-- Round History Tab Content -->
+      <div id="tab-history-content" class="tab-pane active">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>Mode</th>
+                <th>Your Move</th>
+                <th>AI Move</th>
+                <th>Outcome</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr>
+                <td colspan="6" class="empty-cell">No rounds logged yet. Clash now!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tournament Leaderboard Tab Content -->
+      <div id="tab-leaderboard-content" class="tab-pane">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Player</th>
+                <th>Mode</th>
+                <th>Score</th>
+                <th>Rounds</th>
+                <th>Outcome</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <tr>
+                <td colspan="6" class="empty-cell">No completed tournament matches yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Match Completion Celebration Modal -->
+  <div id="match-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="modal-trophy-icon" class="modal-trophy">👑</span>
+        <h3 id="modal-title" class="modal-title">MATCH FINISHED!</h3>
+      </div>
+      <p id="modal-message" class="modal-message">Congratulations! You claimed the tournament victory!</p>
+      
+      <div class="modal-score-box">
+        <div class="modal-score-item">
+          <span class="score-tag">YOU</span>
+          <span id="modal-player-score" class="score-number">3</span>
+        </div>
+        <span class="modal-score-sep">:</span>
+        <div class="modal-score-item">
+          <span class="score-tag">AI</span>
+          <span id="modal-computer-score" class="score-number">1</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="modal-rematch-btn" class="modal-btn primary-btn">Play Rematch</button>
+        <button id="modal-close-btn" class="modal-btn secondary-btn">View Stats</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Player Name Profile Modal -->
+  <div id="profile-modal" class="modal-backdrop hidden">
+    <div class="modal-card small-modal">
+      <h3 class="modal-title">Customize Player</h3>
+      <p class="modal-desc">Set your arcade tag visible on matches and leaderboards:</p>
+      <input type="text" id="player-name-input" class="arcade-input" maxlength="20" placeholder="Player 1" value="Player 1">
+      <div class="modal-actions">
+        <button id="save-player-name-btn" class="modal-btn primary-btn">Save</button>
+        <button id="close-profile-modal-btn" class="modal-btn secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal for Clear History -->
+  <div id="confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-card small-modal">
+      <h3 class="modal-title text-pink">Clear All Data?</h3>
+      <p class="modal-desc">This will reset your round statistics, history logs, and leaderboard records permanently.</p>
+      <div class="modal-actions">
+        <button id="confirm-clear-btn" class="modal-btn danger-btn-confirm">Yes, Reset All</button>
+        <button id="cancel-clear-btn" class="modal-btn secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="arcade-footer">
+    <p>Rock, Paper, Scissors — Phase 3 Complete Arcade Edition &copy; 2026</p>
+    <p class="footer-sub">Engine: Flask 3.1 &bull; Synthesizer: Web Audio API &bull; Production: Gunicorn &bull; Cloud Ready: Render</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>

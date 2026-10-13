@@ -14,10 +14,18 @@ Features:
 
 import math
 import random
-import tkinter as tk
-from tkinter import messagebox
 from typing import Optional, List, Dict, Any
-import customtkinter as ctk
+
+try:
+    import tkinter as tk
+    from tkinter import messagebox
+    import customtkinter as ctk
+    HAS_GUI = True
+except Exception:
+    HAS_GUI = False
+    tk = None
+    messagebox = None
+    ctk = None
 
 from game_logic import CHOICES, CHOICE_KEYS, GameMode, MatchSession, get_round_result
 from storage import StorageManager
@@ -1634,8 +1642,23 @@ class RockPaperScissorsApp(ctk.CTk):
 
 
 def main():
-    app = RockPaperScissorsApp()
-    app.mainloop()
+    if not HAS_GUI:
+        print("[Notice] GUI library not available. Starting Web Server...")
+        from server import app as web_app
+        import os
+        port = int(os.environ.get("PORT", 5000))
+        web_app.run(host="0.0.0.0", port=port)
+        return
+
+    try:
+        app = RockPaperScissorsApp()
+        app.mainloop()
+    except Exception as e:
+        print(f"[Notice] Desktop GUI unavailable ({e}). Starting Web Server...")
+        from server import app as web_app
+        import os
+        port = int(os.environ.get("PORT", 5000))
+        web_app.run(host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":

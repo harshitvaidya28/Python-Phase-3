@@ -5,10 +5,10 @@
     "player_name": "Player 1"
   },
   "statistics": {
-    "total_rounds": 5,
+    "total_rounds": 6,
     "player_wins": 2,
     "computer_wins": 1,
-    "draws": 2,
+    "draws": 3,
     "current_streak": 0,
     "longest_streak": 2,
     "match_wins": 0,
@@ -50,6 +50,14 @@
     }
   },
   "history": [
+    {
+      "round": 1,
+      "mode": "Quick Play",
+      "player_choice": "rock",
+      "computer_choice": "rock",
+      "result": "draw",
+      "timestamp": "2026-10-13 11:44:11"
+    },
     {
       "round": 1,
       "mode": "Quick Play",
