@@ -9,6 +9,8 @@ import subprocess
 
 
 def main():
+    os.environ["PYTHONUTF8"] = "1"
+    os.environ["PYTHONIOENCODING"] = "utf-8"
     port = os.environ.get("PORT", "8501")
     cmd = [
         sys.executable,
